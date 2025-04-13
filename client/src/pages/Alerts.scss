@@ -1,0 +1,168 @@
+.alerts {
+  color: #5dc887;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+
+  .controls {
+    padding: 10px;
+    background: #222;
+    display: grid;
+    grid-auto-flow: column;
+    gap: 10px;
+  }
+
+  .alerts-headers-counters {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    width: 100%;
+    background: #222;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 10px 0;
+  }
+
+  .alerts-header-counter {
+    font-size: 24px;
+    color: #5dc887;
+    padding: 8px 4px;
+    border-radius: 5px;
+    line-height: 1em;
+
+    &.cheap-orders-active {
+      background-color: #ff4500;
+      color: white;
+    }
+
+    &.solid-orders-active {
+      background-color: #0068cd;
+      color: #ffd700;
+    }
+
+    &.big-biznis-active {
+      background-color: #ffd700;
+      color: #71257a;
+    }
+  }
+
+  @media (max-width: 975px) {
+    .alerts-header-counter {
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+  }
+
+  .tables-container {
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .alerts-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    thead {
+      background-color: #222;
+      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    tbody tr {
+      transition: background-color 0.3s;
+    }
+
+    tbody tr.cheap-order {
+      background-color: #ff4500;
+    }
+
+    tbody tr.solid-order {
+      background-color: #0068cd;
+    }
+
+    tbody tr.big-biznis {
+      background-color: #ffd700;
+    }
+  }
+
+  .orders {
+    overflow-y: auto;
+    padding: 10px;
+    display: grid;
+    grid-auto-rows: min-content;
+    gap: 10px;
+  }
+
+  th,
+  td {
+    text-align: left;
+  }
+
+  .order {
+    display: grid;
+    grid-template-columns: 1fr 2fr 2fr 2fr;
+    padding: 5px;
+    gap: 10px;
+
+    &.cheap-order {
+      color: #ff4500;
+    }
+
+    &.solid-order {
+      color: #0068cd;
+    }
+
+    &.big-biznis {
+      color: #ffd700;
+    }
+
+    .timestamp {
+      color: #888;
+    }
+
+    .price,
+    .quantity,
+    .total {
+      text-align: right;
+    }
+  }
+
+}
+
+.counters {
+  margin-bottom: 20px;
+}
+
+.alerts-section {
+  flex: 1;
+  min-width: 300px;
+}
+
+.alerts-table th,
+.alerts-table td {
+  text-align: left;
+}
+
+.alerts-table th {
+  font-weight: bold;
+}
+
+.big-biznis-table tbody tr:hover {
+  background-color: #ffd700;
+  color: #71257a;
+}
+
+.solid-orders-table tbody tr:hover {
+  background-color: #0068cd;
+  color: #ffd700;
+}
+
+.cheap-orders-table tbody tr:hover {
+  background-color: #ff4500;
+  color: #ffffff;
+}

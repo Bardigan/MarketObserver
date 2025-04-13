@@ -1,0 +1,26 @@
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    background-color: #222;
+    color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: 8px;
+  }
+
+  tbody tr {
+    transition: background-color 0.3s;
+  }
+
+  tbody tr:hover {
+    opacity: 0.8;
+  }
+}
