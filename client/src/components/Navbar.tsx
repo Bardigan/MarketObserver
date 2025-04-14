@@ -27,7 +27,7 @@ const Navbar: React.FC = () => {
   return (
     <div className="navbar">
       <nav>
-        {links.map((link, index) => (
+        {links.map((link) => (
           <React.Fragment key={link.to}>
             <Link
               to={link.to}
@@ -35,7 +35,6 @@ const Navbar: React.FC = () => {
             >
               {link.label}
             </Link>
-            {index < links.length - 1 && " | "}
           </React.Fragment>
         ))}
       </nav>
