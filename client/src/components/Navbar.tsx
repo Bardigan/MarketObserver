@@ -4,6 +4,7 @@ import { RootState } from "../store/store";
 import { startStreaming, stopStreaming } from "../store/webSocketSlice";
 import { Link, useLocation } from "react-router-dom";
 import Button from "../lib/Button";
+import { ImCog } from "react-icons/im";
 import "./Navbar.scss";
 
 const Navbar: React.FC = () => {
@@ -45,6 +46,9 @@ const Navbar: React.FC = () => {
         </Button>
         <Button onClick={handleStop} disabled={!isStreaming}>
           Stop
+        </Button>
+        <Button className="settings-button">
+          <ImCog />
         </Button>
       </div>
     </div>
