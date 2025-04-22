@@ -1,7 +1,7 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store/store";
-import { startStreaming, stopStreaming } from "../store/webSocketSlice";
+import { startStreaming, stopStreaming, useMessageCleanup } from "../store/webSocketSlice";
 import { Link, useLocation } from "react-router-dom";
 import Button from "../lib/Button";
 import { ImCog } from "react-icons/im";
@@ -11,6 +11,8 @@ const Navbar: React.FC = () => {
   const dispatch = useDispatch();
   const isStreaming = useSelector((state: RootState) => state.webSocket.isStreaming);
   const location = useLocation();
+
+  useMessageCleanup();
 
   const handleStart = () => {
     dispatch(startStreaming());

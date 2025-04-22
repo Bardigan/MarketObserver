@@ -1,5 +1,32 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Order } from "../types/types";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "./store";
+import { useEffect } from "react";
+
+export const useMessageCleanup = () => {
+  const dispatch = useDispatch();
+  const { allMessages, cheapOrders, solidOrders, bigBiznis } = useSelector(
+    (state: RootState) => state.webSocket
+  );
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    if (allMessages.length > 0 || cheapOrders.length > 0 || 
+        solidOrders.length > 0 || bigBiznis.length > 0) {
+      intervalId = setInterval(() => {
+        dispatch(clearOldAlerts());
+      }, 1000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [allMessages.length, cheapOrders.length, solidOrders.length, bigBiznis.length]);
+};
 
 export interface Alert {
   alertMessage: "Cheap order" | "Solid order" | "Big biznis here";
@@ -56,16 +83,28 @@ const webSocketSlice = createSlice({
       action: PayloadAction<{ messages: Order[]; alerts: Alert[] }>
     ) {
       const { messages, alerts } = action.payload;
-      state.allMessages.push(...messages);
+      const now = Date.now();
+      const oneMinuteAgo = now - 60000;
+
+
+      state.allMessages = [
+        ...messages,
+      ];
 
       alerts.forEach((alert: Alert) => {
-        if (alert.alertMessage === "Cheap order") {
-          state.cheapOrders.push(alert);
-        } else if (alert.alertMessage === "Solid order") {
-          state.solidOrders.push(alert);
-        } else if (alert.alertMessage === "Big biznis here") {
-          state.bigBiznis.push(alert);
-        }
+        const targetArray = alert.alertMessage === "Cheap order" 
+          ? state.cheapOrders 
+          : alert.alertMessage === "Solid order" 
+            ? state.solidOrders 
+            : state.bigBiznis;
+
+        // Clean up expired alerts and add new one
+        targetArray.splice(
+          0, 
+          targetArray.length, 
+          ...targetArray.filter(a => a.timestamp > oneMinuteAgo),
+          alert
+        );
       });
     },
     clearOldAlerts(state) {

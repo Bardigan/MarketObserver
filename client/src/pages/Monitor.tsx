@@ -45,7 +45,7 @@ const Monitor: React.FC = () => {
       ) : (
         <Table
           headers={monitorHeaders}
-          rows={allMessages.slice(-500).reverse()}
+          rows={allMessages}
           renderRow={renderRow}
           className="orders-table"
         />

@@ -9,19 +9,15 @@ const WebSocketHandler: React.FC = () => {
   const dispatch = useDispatch();
   const isStreaming = useSelector((state: RootState) => state.webSocket.isStreaming);
   const wsRef = useRef<WebSocket | null>(null);
-  const messageBuffer = useRef<Order[]>([]);
-  const batchIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const cleanupIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const messagesBufferRef = useRef<(Order & { timestamp: number })[]>([]);
+  const alertsBufferRef = useRef<Alert[]>([]);
 
   useEffect(() => {
     if (!isStreaming) {
       if (wsRef.current) {
         wsRef.current.close();
         wsRef.current = null;
-      }
-      if (batchIntervalRef.current) {
-        clearInterval(batchIntervalRef.current);
-        batchIntervalRef.current = null;
       }
       if (cleanupIntervalRef.current) {
         clearInterval(cleanupIntervalRef.current);
@@ -59,59 +55,40 @@ const WebSocketHandler: React.FC = () => {
       const data: Order = JSON.parse(event.data);
 
       if (data.TYPE === "8") {
-        messageBuffer.current.push({
-          ...data,
-          timestamp: (data.REPORTEDNS ?? 0) / 1_000_000,
-        });
+        const timestamp = (data.REPORTEDNS ?? 0) / 1_000_000;
+        const price = data.P;
+        const quantity = data.Q;
+        const total = price * quantity;
+        
+        // Add message to buffer
+        messagesBufferRef.current.push({ ...data, timestamp });
+        
+        // Process alert
+        let alert: Alert | null = null;
+        
+        if (price < 50000) {
+          alert = { alertMessage: "Cheap order", price, quantity, total, timestamp };
+        } else if (total > 1000000) {
+          alert = { alertMessage: "Big biznis here", price, quantity, total, timestamp };
+        } else if (quantity > 10) {
+          alert = { alertMessage: "Solid order", price, quantity, total, timestamp };
+        }
+
+        if (alert) {
+          alertsBufferRef.current.push(alert);
+        }
+
+        if (messagesBufferRef.current.length >= 500) {
+          dispatch(updateMessagesAndAlerts({ 
+            messages: [...messagesBufferRef.current],
+            alerts: [...alertsBufferRef.current]
+          }));
+          
+          messagesBufferRef.current = [];
+          alertsBufferRef.current = [];
+        }
       }
     };
-
-    batchIntervalRef.current = setInterval(() => {
-      if (messageBuffer.current.length > 0) {
-        const messages:Order[] = [...messageBuffer.current];
-        messageBuffer.current = [];
-
-        const alerts: Alert[] = messages
-          .map((data: any) => {
-            const price = data.P;
-            const quantity = data.Q;
-            const total = price * quantity;
-            const timestamp = data.timestamp;
-
-            if (price < 50000) {
-              return {
-                alertMessage: "Cheap order",
-                price,
-                quantity,
-                total,
-                timestamp,
-              };
-            }
-            if (total > 1000000) {
-              return {
-                alertMessage: "Big biznis here",
-                price,
-                quantity,
-                total,
-                timestamp,
-              };
-            }
-            if (quantity > 10) {
-              return {
-                alertMessage: "Solid order",
-                price,
-                quantity,
-                total,
-                timestamp,
-              };
-            }
-            return null;
-          })
-          .filter((alert:any): alert is Alert => alert !== null);
-
-        dispatch(updateMessagesAndAlerts({ messages, alerts }));
-      }
-    }, 500);
 
     cleanupIntervalRef.current = setInterval(() => {
       dispatch(clearOldAlerts());
@@ -126,13 +103,20 @@ const WebSocketHandler: React.FC = () => {
     };
 
     return () => {
+      // Dispatch any remaining messages before cleanup
+      if (messagesBufferRef.current.length > 0) {
+        dispatch(updateMessagesAndAlerts({ 
+          messages: [...messagesBufferRef.current],
+          alerts: [...alertsBufferRef.current]
+        }));
+      }
+      
+      messagesBufferRef.current = [];
+      alertsBufferRef.current = [];
+      
       if (wsRef.current) {
         wsRef.current.close();
         wsRef.current = null;
-      }
-      if (batchIntervalRef.current) {
-        clearInterval(batchIntervalRef.current);
-        batchIntervalRef.current = null;
       }
       if (cleanupIntervalRef.current) {
         clearInterval(cleanupIntervalRef.current);
