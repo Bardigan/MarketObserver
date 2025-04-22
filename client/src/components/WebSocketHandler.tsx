@@ -82,9 +82,9 @@ const WebSocketHandler: React.FC = () => {
           To: data.TSYM,
           Side: data.SIDE === 1 ? "Buy" : "Sell",
           Action: data.ACTION === 1 ? "Add" : "Remove",
-          Price: data.P?.toFixed(2),
+          Price: `$${data.P?.toFixed(2)}`,
           Quantity: data.Q?.toFixed(4),
-          Total: (data.P * data.Q)?.toFixed(2),
+          Total: `$${(data.P * data.Q)?.toFixed(2)}`,
           Sequence: data.SEQ,
           Class: getOrderClass(data),
           timestamp,
@@ -93,9 +93,9 @@ const WebSocketHandler: React.FC = () => {
         let alert: Alert | null = null;
         
         const alertCoreData = {
-          Price: data.P?.toFixed(2),
+          Price: `$${data.P?.toFixed(2)}`,
           Quantity: data.Q?.toFixed(4),
-          Total: (data.P * data.Q)?.toFixed(2),
+          Total: `$${(data.P * data.Q)?.toFixed(2)}`,
           timestamp
         };
         
