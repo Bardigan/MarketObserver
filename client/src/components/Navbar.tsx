@@ -1,8 +1,9 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store/store";
-import { startStreaming, stopStreaming, useMessageCleanup } from "../store/webSocketSlice";
+import { startStreaming, stopStreaming } from "../store/webSocketSlice";
 import { Link, useLocation } from "react-router-dom";
+import { useMessageCleanup } from "../hooks/useMessageCleanup";
 import Button from "../lib/Button";
 import { ImCog } from "react-icons/im";
 import "./Navbar.scss";

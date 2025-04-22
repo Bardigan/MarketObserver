@@ -1,4 +1,3 @@
-
 export const monitorHeaders = [
     "Market",
     "From",
@@ -11,10 +10,9 @@ export const monitorHeaders = [
     "Sequence",
     "Reported",
     "Delay",
-  ];
-
+];
 export const alertsHeaders = [
     "Price",
     "Quantity",
     "Total",
-  ];
+];

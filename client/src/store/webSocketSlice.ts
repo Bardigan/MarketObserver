@@ -1,48 +1,35 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Order } from "../types/types";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "./store";
-import { useEffect } from "react";
+import { OrdersFormated, AlertArrayKeys, Alert, WebSocketState } from "../types/types";
 
-export const useMessageCleanup = () => {
-  const dispatch = useDispatch();
-  const { allMessages, cheapOrders, solidOrders, bigBiznis } = useSelector(
-    (state: RootState) => state.webSocket
-  );
-
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-
-    if (allMessages.length > 0 || cheapOrders.length > 0 || 
-        solidOrders.length > 0 || bigBiznis.length > 0) {
-      intervalId = setInterval(() => {
-        dispatch(clearOldAlerts());
-      }, 1000);
-    }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [allMessages.length, cheapOrders.length, solidOrders.length, bigBiznis.length]);
+const filterStaleItems = <T extends { timestamp: number }>(
+  items: T[],
+  threshold: number = 60000
+): T[] => {
+  const cutoffTime = Date.now() - threshold;
+  return items.filter((item) => item.timestamp > cutoffTime);
 };
 
-export interface Alert {
-  alertMessage: "Cheap order" | "Solid order" | "Big biznis here";
-  price: number;
-  quantity: number;
-  total: number;
-  timestamp: number;
-}
+const alertTypeToArrayMap: Record<string, AlertArrayKeys> = {
+  "Cheap order": "cheapOrders",
+  "Solid order": "solidOrders",
+  "Big biznis here": "bigBiznis"
+};
 
-export interface WebSocketState {
-  isStreaming: boolean;
-  allMessages: Order[];
-  cheapOrders: Alert[];
-  solidOrders: Alert[];
-  bigBiznis: Alert[];
-}
+const getAlertArrayByType = (
+  state: WebSocketState,
+  alertType: string
+): Alert[] => {
+  const arrayKey = alertTypeToArrayMap[alertType];
+  return state[arrayKey];
+};
+
+
+const clearStaleItems = (state: WebSocketState): void => {
+  state.allMessages = filterStaleItems(state.allMessages);
+  state.cheapOrders = filterStaleItems(state.cheapOrders);
+  state.solidOrders = filterStaleItems(state.solidOrders);
+  state.bigBiznis = filterStaleItems(state.bigBiznis);
+};
 
 const initialState: WebSocketState = {
   isStreaming: false,
@@ -56,78 +43,42 @@ const webSocketSlice = createSlice({
   name: "webSocket",
   initialState,
   reducers: {
-    stopStreaming(state) {
+    stopStreaming: (state: WebSocketState): void => {
       state.isStreaming = false;
     },
-    startStreaming(state) {
+    
+    startStreaming: (state: WebSocketState): void => {
       state.isStreaming = true;
-
-      // Filter out messages and alerts older than 1 minute
-      const oneMinuteAgo = Date.now() - 60000;
-
-      state.allMessages = state.allMessages.filter(
-        (message: Order) => message.timestamp > oneMinuteAgo
-      );
-      state.cheapOrders = state.cheapOrders.filter(
-        (alert: Alert) => alert.timestamp > oneMinuteAgo
-      );
-      state.solidOrders = state.solidOrders.filter(
-        (alert: Alert) => alert.timestamp > oneMinuteAgo
-      );
-      state.bigBiznis = state.bigBiznis.filter(
-        (alert: Alert) => alert.timestamp > oneMinuteAgo
-      );
+      clearStaleItems(state);
     },
-    updateMessagesAndAlerts(
-      state,
-      action: PayloadAction<{ messages: Order[]; alerts: Alert[] }>
-    ) {
+    
+    updateMessagesAndAlerts: (
+      state: WebSocketState,
+      action: PayloadAction<{ messages: OrdersFormated[]; alerts: Alert[] }>
+    ): void => {
       const { messages, alerts } = action.payload;
-      const now = Date.now();
-      const oneMinuteAgo = now - 60000;
+      state.allMessages = messages;
 
-
-      state.allMessages = [
-        ...messages,
-      ];
-
-      alerts.forEach((alert: Alert) => {
-        const targetArray = alert.alertMessage === "Cheap order" 
-          ? state.cheapOrders 
-          : alert.alertMessage === "Solid order" 
-            ? state.solidOrders 
-            : state.bigBiznis;
-
-        // Clean up expired alerts and add new one
-        targetArray.splice(
-          0, 
-          targetArray.length, 
-          ...targetArray.filter(a => a.timestamp > oneMinuteAgo),
-          alert
-        );
+      alerts.forEach((alert) => {
+        const targetArray = getAlertArrayByType(state, alert.alertMessage);
+        const filteredAlerts = filterStaleItems(targetArray);
+        const arrayKey = alertTypeToArrayMap[alert.alertMessage];
+        
+        state[arrayKey] = [...filteredAlerts, alert];
       });
     },
-    clearOldAlerts(state) {
-      // Clear old alerts and messages older than 1 minute
-      const oneMinuteAgo = Date.now() - 60000;
-
-      state.cheapOrders = state.cheapOrders.filter(
-        (alert: Alert) => alert.timestamp > oneMinuteAgo
-      );
-      state.solidOrders = state.solidOrders.filter(
-        (alert: Alert) => alert.timestamp > oneMinuteAgo
-      );
-      state.bigBiznis = state.bigBiznis.filter(
-        (alert: Alert) => alert.timestamp > oneMinuteAgo
-      );
-      state.allMessages = state.allMessages.filter(
-        (message: Order) => message.timestamp > oneMinuteAgo
-      );
+    
+    clearOldAlerts: (state: WebSocketState): void => {
+      clearStaleItems(state);
     },
   },
 });
 
-export const { stopStreaming, startStreaming, updateMessagesAndAlerts, clearOldAlerts } =
-  webSocketSlice.actions;
+export const { 
+  stopStreaming,
+  startStreaming,
+  updateMessagesAndAlerts,
+  clearOldAlerts 
+} = webSocketSlice.actions;
 
 export default webSocketSlice.reducer;

@@ -25,6 +25,22 @@ const mockMessage = {
   CCSEQ: 67890,
 };
 
+const formattedMockMessage = {
+  Market: mockMessage.M,
+  From: mockMessage.FSYM,
+  To: mockMessage.TSYM,
+  Side: mockMessage.SIDE === 1 ? "Buy" : "Sell",
+  Action: mockMessage.ACTION === 1 ? "Add" : "Remove",
+  Price: mockMessage.P.toFixed(2),
+  Quantity: mockMessage.Q.toFixed(4),
+  Total: (mockMessage.P * mockMessage.Q).toFixed(2),
+  Sequence: mockMessage.SEQ,
+  Reported: new Date(mockMessage.REPORTEDNS / 1_000_000).toLocaleString(),
+  Delay: mockMessage.DELAYNS,
+  Class: mockMessage.P < 50000 ? "cheap-order" : "",
+  timestamp: mockMessage.REPORTEDNS / 1_000_000,
+};
+
 let store: ReturnType<typeof configureStore>;
 
 beforeEach(() => {
@@ -70,7 +86,7 @@ describe("Monitor Component", () => {
 
     store.dispatch(
       updateMessagesAndAlerts({
-        messages: [mockMessage],
+        messages: [formattedMockMessage],
         alerts: [],
       })
     );

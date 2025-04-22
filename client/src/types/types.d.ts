@@ -12,9 +12,8 @@ export interface Order {
     REPORTEDNS: number;
     DELAYNS: number;
     [key: string]: any;
-  }
-
-  export interface OrdersFormated {
+}
+export interface OrdersFormated {
     Market: string;
     From: string;
     To: string;
@@ -29,22 +28,19 @@ export interface Order {
     Class: string;
     timestamp: number;
     [key: string]: any;
-  }
-
-export type AlertArrayKeys = "cheapOrders" | "solidOrders" | "bigBiznis";
-
-export interface Alert {
-  alertMessage: string;
-  Price: string;
-  Quantity: string;
-  Total: string;
-  timestamp: number;
 }
-
+export type AlertArrayKeys = "cheapOrders" | "solidOrders" | "bigBiznis";
+export interface Alert {
+    alertMessage: string;
+    Price: string;
+    Quantity: string;
+    Total: string;
+    timestamp: number;
+}
 export interface WebSocketState {
-  isStreaming: boolean;
-  allMessages: OrdersFormated[];
-  cheapOrders: Alert[];
-  solidOrders: Alert[];
-  bigBiznis: Alert[];
+    isStreaming: boolean;
+    allMessages: OrdersFormated[];
+    cheapOrders: Alert[];
+    solidOrders: Alert[];
+    bigBiznis: Alert[];
 }

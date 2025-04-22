@@ -1,16 +1,21 @@
 import React, { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { stopStreaming, updateMessagesAndAlerts, clearOldAlerts } from "../store/webSocketSlice";
+import {
+  stopStreaming,
+  updateMessagesAndAlerts,
+  clearOldAlerts,
+} from "../store/webSocketSlice";
 import { RootState } from "../store/store";
-import { Alert } from "../store/webSocketSlice";
-import { Order } from "../types/types";
+import { Order, OrdersFormated, Alert } from "../types/types";
 
 const WebSocketHandler: React.FC = () => {
   const dispatch = useDispatch();
-  const isStreaming = useSelector((state: RootState) => state.webSocket.isStreaming);
+  const isStreaming = useSelector(
+    (state: RootState) => state.webSocket.isStreaming
+  );
   const wsRef = useRef<WebSocket | null>(null);
   const cleanupIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const messagesBufferRef = useRef<(Order & { timestamp: number })[]>([]);
+  const messagesBufferRef = useRef<(OrdersFormated & { timestamp: number })[]>([]);
   const alertsBufferRef = useRef<Alert[]>([]);
 
   useEffect(() => {
@@ -54,24 +59,61 @@ const WebSocketHandler: React.FC = () => {
     socket.onmessage = (event) => {
       const data: Order = JSON.parse(event.data);
 
+      const formatReportedNS = (reportedNS: number) => {
+        const date = new Date(reportedNS / 1_000_000);
+        return date.toLocaleString();
+      };
+
+      const getOrderClass = (order: Order) => {
+        if (order.P < 50000) return "cheap-order";
+        if (order.P * order.Q > 1000000) return "big-biznis";
+        if (order.Q > 10) return "solid-order";
+        return "";
+      };
+
       if (data.TYPE === "8") {
         const timestamp = (data.REPORTEDNS ?? 0) / 1_000_000;
-        const price = data.P;
-        const quantity = data.Q;
-        const total = price * quantity;
-        
-        // Add message to buffer
-        messagesBufferRef.current.push({ ...data, timestamp });
-        
-        // Process alert
+
+        messagesBufferRef.current.push({
+          Market: data.M,
+          Reported: formatReportedNS(data.REPORTEDNS),
+          Delay: data.DELAYNS,
+          From: data.FSYM,
+          To: data.TSYM,
+          Side: data.SIDE === 1 ? "Buy" : "Sell",
+          Action: data.ACTION === 1 ? "Add" : "Remove",
+          Price: data.P?.toFixed(2),
+          Quantity: data.Q?.toFixed(4),
+          Total: (data.P * data.Q)?.toFixed(2),
+          Sequence: data.SEQ,
+          Class: getOrderClass(data),
+          timestamp,
+        });
+
         let alert: Alert | null = null;
         
-        if (price < 50000) {
-          alert = { alertMessage: "Cheap order", price, quantity, total, timestamp };
-        } else if (total > 1000000) {
-          alert = { alertMessage: "Big biznis here", price, quantity, total, timestamp };
-        } else if (quantity > 10) {
-          alert = { alertMessage: "Solid order", price, quantity, total, timestamp };
+        const alertCoreData = {
+          Price: data.P?.toFixed(2),
+          Quantity: data.Q?.toFixed(4),
+          Total: (data.P * data.Q)?.toFixed(2),
+          timestamp
+        };
+        
+        if (data.P < 50000) {
+          alert = {
+            ...alertCoreData,
+            alertMessage: "Cheap order",
+          };
+        } else if ((data.P * data.Q) > 1000000) {
+          alert = {
+            ...alertCoreData,
+            alertMessage: "Big biznis here",
+          };
+        } else if (data.Q > 10) {
+          alert = {
+            ...alertCoreData,
+            alertMessage: "Solid order",
+          };
         }
 
         if (alert) {
@@ -79,11 +121,13 @@ const WebSocketHandler: React.FC = () => {
         }
 
         if (messagesBufferRef.current.length >= 500) {
-          dispatch(updateMessagesAndAlerts({ 
-            messages: [...messagesBufferRef.current],
-            alerts: [...alertsBufferRef.current]
-          }));
-          
+          dispatch(
+            updateMessagesAndAlerts({
+              messages: [...messagesBufferRef.current],
+              alerts: [...alertsBufferRef.current],
+            })
+          );
+
           messagesBufferRef.current = [];
           alertsBufferRef.current = [];
         }
@@ -103,17 +147,18 @@ const WebSocketHandler: React.FC = () => {
     };
 
     return () => {
-      // Dispatch any remaining messages before cleanup
       if (messagesBufferRef.current.length > 0) {
-        dispatch(updateMessagesAndAlerts({ 
-          messages: [...messagesBufferRef.current],
-          alerts: [...alertsBufferRef.current]
-        }));
+        dispatch(
+          updateMessagesAndAlerts({
+            messages: [...messagesBufferRef.current],
+            alerts: [...alertsBufferRef.current],
+          })
+        );
       }
-      
+
       messagesBufferRef.current = [];
       alertsBufferRef.current = [];
-      
+
       if (wsRef.current) {
         wsRef.current.close();
         wsRef.current = null;

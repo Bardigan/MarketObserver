@@ -29,13 +29,6 @@ const Alerts: React.FC = () => {
     <Table
       headers={alertsHeaders}
       rows={orders}
-      renderRow={(alert, index) => (
-        <tr key={index}>
-          <td>${alert.price.toFixed(2)}</td>
-          <td>{alert.quantity.toFixed(4)}</td>
-          <td>${alert.total.toFixed(2)}</td>
-        </tr>
-      )}
       className={`alerts-table ${type}`}
     />
   );

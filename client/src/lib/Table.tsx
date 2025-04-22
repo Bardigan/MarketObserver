@@ -1,14 +1,13 @@
-import React from "react";
 import "./Table.scss";
 
 interface TableProps<T> {
   headers: string[];
   rows: T[];
-  renderRow: (row: T, index: number) => React.ReactNode;
   className?: string;
 }
 
-const Table = <T,>({ headers, rows, renderRow, className }: TableProps<T>) => {
+const Table = <T extends Record<string, any>>({ headers, rows, className }: TableProps<T>) => {
+  
   return (
     <div className={`table-container ${className || ""}`}>
       <table className="custom-table">
@@ -20,7 +19,15 @@ const Table = <T,>({ headers, rows, renderRow, className }: TableProps<T>) => {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, index) => renderRow(row, index))}
+          {rows.map((row, rowIndex) => (
+            <tr className={row.Class? row.Class : ""} key={rowIndex}>
+              {headers.map((header, colIndex) => (
+                <td key={`${rowIndex}-${colIndex}`}>
+                  {row[header] !== undefined ? row[header] : ''}
+                </td>
+              ))}
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
