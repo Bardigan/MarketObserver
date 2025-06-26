@@ -11,7 +11,7 @@ export interface Order {
     SEQ: number;
     REPORTEDNS: number;
     DELAYNS: number;
-    [key: string]: any;
+    [key: string]: string | number;
   }
 
   export interface OrdersFormated {
@@ -28,7 +28,7 @@ export interface Order {
     Delay: number;
     Class: string;
     timestamp: number;
-    [key: string]: any;
+    [key: string]: string | number;
   }
 
 export type AlertArrayKeys = "cheapOrders" | "solidOrders" | "bigBiznis";
@@ -39,6 +39,7 @@ export interface Alert {
   Quantity: string;
   Total: string;
   timestamp: number;
+  [key: string]: string | number;
 }
 
 export interface WebSocketState {

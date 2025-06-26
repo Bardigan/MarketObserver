@@ -11,4 +11,32 @@ module.exports = {
     '\\.(css|less|sass|scss)$': 'identity-obj-proxy',
   },
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
+  
+  // Coverage configuration
+  collectCoverage: true,
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/main.tsx',
+    '!src/vite-env.d.ts',
+  ],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov', 'html', 'cobertura'],
+  coverageThreshold: {
+    global: {
+      branches: 20,
+      functions: 30,
+      lines: 30,
+      statements: 30,
+    },
+  },
+  
+  // Test reporting
+  reporters: [
+    'default',
+    ['jest-junit', {
+      outputDirectory: 'test-results',
+      outputName: 'junit.xml',
+    }],
+  ],
 };

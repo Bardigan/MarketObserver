@@ -6,7 +6,7 @@ interface TableProps<T> {
   className?: string;
 }
 
-const Table = <T extends Record<string, any>>({ headers, rows, className }: TableProps<T>) => {
+const Table = <T extends Record<string, string | number | undefined>>({ headers, rows, className }: TableProps<T>) => {
   
   return (
     <div className={`table-container ${className || ""}`}>
@@ -20,7 +20,7 @@ const Table = <T extends Record<string, any>>({ headers, rows, className }: Tabl
         </thead>
         <tbody>
           {rows.map((row, rowIndex) => (
-            <tr className={row.Class? row.Class : ""} key={rowIndex}>
+            <tr className={row.Class ? String(row.Class) : ""} key={rowIndex}>
               {headers.map((header, colIndex) => (
                 <td key={`${rowIndex}-${colIndex}`}>
                   {row[header] !== undefined ? row[header] : ''}

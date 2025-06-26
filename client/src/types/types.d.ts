@@ -11,7 +11,7 @@ export interface Order {
     SEQ: number;
     REPORTEDNS: number;
     DELAYNS: number;
-    [key: string]: any;
+    [key: string]: string | number;
 }
 export interface OrdersFormated {
     Market: string;
@@ -27,7 +27,7 @@ export interface OrdersFormated {
     Delay: number;
     Class: string;
     timestamp: number;
-    [key: string]: any;
+    [key: string]: string | number;
 }
 export type AlertArrayKeys = "cheapOrders" | "solidOrders" | "bigBiznis";
 export interface Alert {
@@ -36,6 +36,7 @@ export interface Alert {
     Quantity: string;
     Total: string;
     timestamp: number;
+    [key: string]: string | number;
 }
 export interface WebSocketState {
     isStreaming: boolean;
